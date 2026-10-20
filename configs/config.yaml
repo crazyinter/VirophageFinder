@@ -1,0 +1,115 @@
+# VirophageFinder Configuration
+# Supervised fine-tuning configuration
+
+model:
+  # Protein modality (ESM2-3B)
+  protein:
+    model_name: "facebook/esm2_t48_15B_UR50D"  # ESM2-3B (use esm2_t36_3B_UR50D for 3B)
+    # For smaller GPU: "facebook/esm2_t33_650M_UR50D"
+    hidden_dim: 2560  # ESM2-3B hidden size; 1280 for 650M
+    proj_dim: 512
+    lora:
+      enabled: true
+      r: 8
+      alpha: 16
+      dropout: 0.1
+      target_modules: ["q_proj", "v_proj"]
+    freeze_base: false  # LoRA handles parameter efficiency
+    max_proteins_per_contig: 50  # max genes to process per contig
+
+  # Nucleotide modality (DNABERT-S)
+  nucleotide:
+    backbone: "dnabert_s"  # options: dnabert_s, mamba2
+    model_name: "zhihan1996/DNABERT-S"
+    hidden_dim: 768
+    proj_dim: 512
+    max_length: 512  # BPE token length (~2.5kb sequence)
+    sliding_window: true
+    window_step: 256  # tokens
+    lora:
+      enabled: true
+      r: 16
+      alpha: 32
+      dropout: 0.1
+      target_modules: ["query", "value"]
+
+  # Mamba-2 backbone (alternative for long sequences)
+  mamba:
+    d_model: 512
+    d_state: 16
+    d_conv: 4
+    expand: 2
+    n_layers: 8
+    dropout: 0.1
+    proj_dim: 512
+
+  # Graph modality (GAT)
+  graph:
+    hidden_dim: 128
+    num_heads: 8
+    num_layers: 2
+    dropout: 0.2
+    proj_dim: 256
+    node_feature_dim: 128  # projected from ESM2 protein embedding
+
+  # Gated fusion
+  fusion:
+    common_dim: 256
+    dropout: 0.1
+
+  # Classifier
+  classifier:
+    hidden_dims: [128, 64]
+    dropout: 0.3
+    num_classes: 1  # binary: virophage vs non-virophage
+    num_phylum_classes: 5  # auxiliary: virophage families
+    num_protein_classes: 4  # auxiliary: MCP/ATPase/protease/other
+
+data:
+  train_dir: "data/processed/train"
+  val_dir: "data/processed/val"
+  test_dir: "data/processed/test"
+  max_contig_length: 50000  # bp
+  min_contig_length: 500  # bp
+  num_workers: 4
+  pin_memory: true
+
+  augmentation:
+    enabled: true
+    mutation_rates: [0.01, 0.03, 0.05]
+    reverse_complement: true
+    gene_deletion_prob: 0.1
+
+training:
+  epochs: 50
+  batch_size: 8
+  gradient_accumulation_steps: 4  # effective batch = 32
+  learning_rate: 0.0001  # for new layers
+  backbone_learning_rate: 0.00001  # for foundation model layers
+  weight_decay: 0.01
+  warmup_ratio: 0.05
+  lr_scheduler: "cosine"
+  early_stopping_patience: 10
+  max_grad_norm: 1.0
+  mixed_precision: "fp16"  # options: fp16, bf16, none
+
+  loss:
+    focal_alpha: 0.75
+    focal_gamma: 2.0
+    protein_aux_weight: 0.2
+    phylum_aux_weight: 0.1
+
+  optimizer: "adamw"
+  adam_beta1: 0.9
+  adam_beta2: 0.999
+
+output:
+  output_dir: "checkpoints/finetune"
+  save_best_only: true
+  monitor_metric: "val_f1"
+  monitor_mode: "max"
+  log_interval: 10
+  eval_interval: 1
+
+seed: 42
+device: "cuda"  # auto-detect if not specified
