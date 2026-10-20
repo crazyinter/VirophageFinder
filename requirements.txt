@@ -1,0 +1,53 @@
+# Core deep learning
+torch>=2.0.0
+torchvision>=0.15.0
+torchaudio>=2.0.0
+
+# HuggingFace
+transformers>=4.35.0
+datasets>=2.14.0
+tokenizers>=0.14.0
+accelerate>=0.24.0
+peft>=0.6.0  # LoRA fine-tuning
+
+# Genomic foundation models
+# DNABERT-2 / DNABERT-S installed via transformers
+# ESM2 installed via fair-esm or transformers
+fair-esm>=2.0.0
+
+# Mamba (optional, for long-sequence backbone)
+# mamba-ssm>=1.2.0  # requires CUDA, install separately if needed
+causal-conv1d>=1.1.0  # dependency for mamba-ssm
+
+# Bioinformatics
+biopython>=1.81
+pyfaidx>=0.7.0
+scikit-bio>=0.5.9
+
+# Gene prediction
+# Prodigal should be installed via conda: conda install -c bioconda prodigal
+
+# Data processing
+numpy>=1.24.0
+pandas>=2.0.0
+scipy>=1.10.0
+scikit-learn>=1.3.0
+
+# Graph neural networks
+torch-geometric>=2.4.0
+# torch-scatter, torch-sparse installed via pip for matching torch version
+
+# Configuration and logging
+pyyaml>=6.0
+wandb>=0.15.0
+tensorboard>=2.14.0
+tqdm>=4.65.0
+
+# Utilities
+rich>=13.0.0
+click>=8.1.0
+omegaconf>=2.3.0
+
+# Evaluation
+matplotlib>=3.7.0
+seaborn>=0.12.0
