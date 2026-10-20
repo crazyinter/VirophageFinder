@@ -1,0 +1,70 @@
+# VirophageFinder Contrastive Pre-training Configuration
+
+model:
+  protein:
+    model_name: "facebook/esm2_t36_3B_UR50D"
+    hidden_dim: 2560
+    proj_dim: 512
+    lora:
+      enabled: true
+      r: 8
+      alpha: 16
+      dropout: 0.1
+      target_modules: ["q_proj", "v_proj"]
+    max_proteins_per_contig: 30
+
+  nucleotide:
+    backbone: "dnabert_s"
+    model_name: "zhihan1996/DNABERT-S"
+    hidden_dim: 768
+    proj_dim: 512
+    max_length: 512
+    lora:
+      enabled: true
+      r: 16
+      alpha: 32
+      dropout: 0.1
+      target_modules: ["query", "value"]
+
+  # Contrastive projection head
+  projection:
+    input_dim: 1024  # protein_proj + nucleotide_proj
+    hidden_dim: 512
+    output_dim: 128
+
+data:
+  unlabeled_contigs: "data/unlabeled_viral_contigs.fasta"
+  max_contig_length: 10000
+  min_contig_length: 1000
+  num_workers: 8
+  pin_memory: true
+
+  # Positive pair construction
+  positive_pairs:
+    same_genome_fragments: true  # two fragments from same genome
+    min_fragment_overlap: 0  # no overlap required
+    homologous_proteins: true
+    homology_threshold: 0.30  # 30% sequence identity
+
+training:
+  epochs: 15
+  batch_size: 32
+  gradient_accumulation_steps: 2
+  learning_rate: 0.0003
+  weight_decay: 0.01
+  warmup_ratio: 0.1
+  lr_scheduler: "cosine"
+  max_grad_norm: 1.0
+  mixed_precision: "fp16"
+
+  # InfoNCE loss
+  infonce:
+    temperature: 0.07
+
+output:
+  output_dir: "checkpoints/pretrain"
+  save_interval: 1
+  log_interval: 20
+
+seed: 42
+device: "cuda"
