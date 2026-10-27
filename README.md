@@ -14,7 +14,7 @@ These are combined through a gated fusion mechanism, with contrastive pre-traini
 
 ```bash
 # Clone the repository
-git clone https://github.com/virophagefinder/VirophageFinder.git
+git clone https://github.com/crazyinter/VirophageFinder.git
 cd VirophageFinder
 
 # Create conda environment
